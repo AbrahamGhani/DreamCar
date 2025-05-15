@@ -88,9 +88,17 @@ public class Dealership {
         return results;
     }
 
+    public Vehicle getVehicleByVin(int vin) {
+        for (Vehicle v : getAllVehicles()) {
+            if (v.getVin() == vin) {
+                return v;
+            }
+        }
+        return null; // not found
+    }
 
     public void removeVehicle(int vin) {
-        getAllVehicles().removeIf(v -> v.getVin() == vin);
+        inventory.removeIf(v -> v.getVin() == vin);
     }
 
     // Getters and setters for name, address, phone

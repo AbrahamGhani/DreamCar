@@ -1,9 +1,12 @@
 package com.dreamcar.ui;
 
 import com.dreamcar.data.DealershipFileManager;
+import com.dreamcar.model.Contract;
 import com.dreamcar.model.Dealership;
 import com.dreamcar.model.Vehicle;
-
+import com.dreamcar.model.SalesContract;
+import com.dreamcar.model.LeaseContract;
+import com.dreamcar.data.ContractFileManager;
 import java.util.*;
 
 public class UserInterface {
@@ -31,6 +34,7 @@ public class UserInterface {
                     case 7 -> processAllVehiclesRequest();
                     case 8 -> processAddVehicleRequest();
                     case 9 -> processRemoveVehicleRequest();
+                    case 10 -> processSellOrLeaseRequest();
                     case 99 -> System.out.println("Goodbye!");
                     default -> System.out.println("Invalid option. Please try again.");
                 }
@@ -59,6 +63,7 @@ public class UserInterface {
         System.out.println("7 - List All Vehicles");
         System.out.println("8 - Add Vehicle");
         System.out.println("9 - Remove Vehicle");
+        System.out.println("10 - Sell or Lease a Vehicle");
         System.out.println("99 - Quit");
         System.out.print("Select an option: ");
     }
@@ -181,8 +186,73 @@ public class UserInterface {
 
         DealershipFileManager dfm = new DealershipFileManager();
         dfm.saveDealership(dealership);
+        System.out.println("Vehicle removed successfully!");System.out.println("Vehicles remaining:");
+        for (Vehicle v : dealership.getAllVehicles()) {
+            System.out.println(v.getVin());
+        }
 
-        System.out.println("Vehicle removed successfully!");
+    }
+
+    private String getTodayDate() {
+        return new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+    }
+
+    private void processSellOrLeaseRequest() {
+        System.out.print("Enter VIN of the vehicle to sell or lease: ");
+        int vin = scanner.nextInt();
+        scanner.nextLine();
+
+        Vehicle vehicle = dealership.getVehicleByVin(vin);
+
+        if (vehicle == null) {
+            System.out.println("Vehicle not found.");
+            return;
+        }
+
+        // Don't allow leasing cars older than 3 years
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        boolean canLease = vehicle.getYear() >= currentYear - 3;
+
+        System.out.print("Enter customer's full name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter customer's email: ");
+        String email = scanner.nextLine();
+
+        System.out.print("Is this a (1) Sale or (2) Lease? ");
+        int option = scanner.nextInt();
+        scanner.nextLine();
+
+        Contract contract;
+
+        if (option == 1) {
+            System.out.print("Is the customer financing? (yes/no): ");
+            boolean isFinanced = scanner.nextLine().trim().equalsIgnoreCase("yes");
+
+            contract = new SalesContract(
+                    getTodayDate(), name, email, vehicle, isFinanced
+            );
+        } else if (option == 2 && canLease) {
+            contract = new LeaseContract(
+                    getTodayDate(), name, email, vehicle
+            );
+        } else {
+            System.out.println("Invalid option or vehicle not eligible for leasing.");
+            return;
+        }
+
+        // Save contract
+        ContractFileManager manager = new ContractFileManager();
+        manager.saveContract(contract);
+
+        // Remove from inventory
+        dealership.removeVehicle(vin);
+        new DealershipFileManager().saveDealership(dealership);
+        System.out.println("Vehicles remaining:");
+        for (Vehicle v : dealership.getAllVehicles()) {
+            System.out.println(v.getVin());
+        }
+        System.out.println("Contract recorded and vehicle removed from inventory.");
     }
 
 

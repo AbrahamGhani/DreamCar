@@ -2,16 +2,17 @@ package com.dreamcar.data;
 
 import com.dreamcar.model.Dealership;
 import com.dreamcar.model.Vehicle;
-
+import java.nio.file.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DealershipFileManager {
 
     public Dealership getDealership() {
         Dealership dealership = null;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/dealership.csv"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("dealership.csv"))) {
             String header = reader.readLine();
             String[] dealerInfo = header.split("\\|");
             dealership = new Dealership(dealerInfo[0], dealerInfo[1], dealerInfo[2]);
@@ -36,7 +37,7 @@ public class DealershipFileManager {
     }
 
     public void saveDealership(Dealership dealership) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("src/main/resources/dealership.csv"))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("dealership.csv"))) {
 
             // Write the dealership header
             writer.printf("%s|%s|%s\n",
@@ -58,11 +59,16 @@ public class DealershipFileManager {
                         v.getPrice()
                 );
             }
-
+            System.out.println("Saving to: " + new File("dealership.csv").getAbsolutePath());
             System.out.println("Dealership saved to file.");
 
         } catch (IOException e) {
             System.out.println("Error saving dealership to file: " + e.getMessage());
         }
     }
+
+
+
+
+
 }
